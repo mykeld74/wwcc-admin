@@ -1,0 +1,198 @@
+/* Global CSS Custom Properties */
+:root {
+	--primaryColor: oklch(0.5988 0.1464 40.71);
+	--secondaryColor: oklch(0.854 0.012 262.2);
+	--accentColor: oklch(0.5988 0.1464 40.71);
+	--contrastColor: oklch(0.972 0.001 262.2);
+	--backgroundColor: oklch(0.1464 0.012 262.2);
+	--lightBackground: #1e293b;
+	--borderColor: #334155;
+	--textMuted: #94a3b8;
+	--cardBackground: #1e293b;
+	--inputBackground: #334155;
+}
+
+/* Global Reset and Base Styles */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	line-height: 1.6;
+	color: var(--contrastColor);
+	background: var(--backgroundColor);
+	min-height: 100vh;
+}
+
+/* Typography */
+h1 {
+	font-size: clamp(1.5rem, 4vw, 2.5rem);
+	font-weight: 700;
+}
+
+h2 {
+	color: var(--primaryColor);
+	margin: 0 0 0.5rem 0;
+	font-size: 1.75rem;
+	text-align: center;
+}
+
+/* Layout Components */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1rem;
+}
+
+.header {
+	color: white;
+	padding: 1.5rem 0;
+	border-bottom: 1px solid var(--borderColor);
+	h1 {
+		margin-bottom: 0;
+	}
+}
+
+.header .container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.nav {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.navLink {
+	color: white;
+	text-decoration: none;
+	padding: 0.5rem 1rem;
+	border-radius: 6px;
+	transition: background-color 0.2s ease;
+	font-weight: 500;
+}
+
+.navLink:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.logoutBtn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: inherit;
+	font-family: inherit;
+}
+
+.content {
+	padding: 2rem 0;
+}
+
+/* Form Styles */
+.formGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+label {
+	font-weight: 600;
+	color: var(--contrastColor);
+	font-size: 0.9rem;
+}
+
+.input {
+	padding: 0.75rem;
+	border: 2px solid var(--borderColor);
+	border-radius: 8px;
+	font-size: 1rem;
+	background: var(--inputBackground);
+	color: var(--contrastColor);
+	transition: border-color 0.2s ease;
+	font-family: inherit;
+}
+
+.input:focus {
+	outline: none;
+	border-color: var(--secondaryColor);
+	box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.submitBtn {
+	background: oklch(0 0 0);
+	color: white;
+	border: none;
+	padding: 0.75rem 1.5rem;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		box-shadow 0.2s ease;
+}
+
+.submitBtn:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.submitBtn:active {
+	transform: translateY(0);
+}
+
+/* Card Styles */
+.card {
+	background: var(--cardBackground);
+	border-radius: 12px;
+	border: 1px solid var(--borderColor);
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Utility Classes */
+.textCenter {
+	text-align: center;
+}
+
+.mb2 {
+	margin-bottom: 2rem;
+}
+
+.mb3 {
+	margin-bottom: 3rem;
+}
+
+.mb4 {
+	margin-bottom: 4rem;
+}
+
+/* Print styles */
+@media print {
+	.nav,
+	.userInfo {
+		display: none;
+	}
+	.container > .header {
+		display: none;
+	}
+
+	.content {
+		padding: 2rem 0;
+	}
+	.requests {
+		--contrastColor: black;
+	}
+	.requestName {
+		color: var(--contrastColor);
+	}
+	.header {
+		h1 {
+			color: #000000;
+		}
+	}
+}

@@ -1,4 +1,4 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
+// See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
 declare global {
 	namespace App {
@@ -7,6 +7,20 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+	}
+
+	interface Window {
+		google: {
+			auth2: {
+				getAuthInstance(): {
+					signIn(): Promise<{
+						getAuthResponse(): {
+							id_token: string;
+						};
+					}>;
+				};
+			};
+		};
 	}
 }
 
