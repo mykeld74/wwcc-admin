@@ -1,11 +1,11 @@
 <script lang="ts">
-	let request = '';
-	let name = '';
-	let email = '';
-	let isStaffOnly = false;
-	let isSubmitting = false;
-	let submitMessage = '';
-	let submitError = '';
+	let request = $state('');
+	let name = $state('');
+	let email = $state('');
+	let isStaffOnly = $state(false);
+	let isSubmitting = $state(false);
+	let submitMessage = $state('');
+	let submitError = $state('');
 
 	async function handleSubmit() {
 		if (!request.trim()) {
@@ -54,7 +54,7 @@
 	<h2>Westwoods Prayer Request</h2>
 	<p class="formDescription">Write out your prayer request below.</p>
 
-	<form on:submit|preventDefault={handleSubmit} class="form">
+	<form onsubmit={handleSubmit} class="form">
 		<div class="formGroup">
 			<label for="request" class="required"> How can we join you in prayer? </label>
 			<textarea

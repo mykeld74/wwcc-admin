@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	let user: any = null;
-	let isLoading = true;
-	let stats: any = null;
+	let user = $state<any>(null);
+	let isLoading = $state(true);
+	let stats = $state<any>(null);
 
-	onMount(async () => {
-		await checkAuth();
+	// Check authentication on mount
+	$effect(() => {
+		checkAuth();
 	});
 
 	async function checkAuth() {
@@ -87,85 +87,72 @@
 	<title>Admin - Westwoods Prayer Requests</title>
 </svelte:head>
 
-<main>
-	<header class="header">
-		<div class="container">
-			<h1>Westwoods Prayer Requests</h1>
-			<nav class="nav">
-				<a href="/" class="navLink">Home</a>
-				<a href="/requests" class="navLink">View Requests</a>
-				<button on:click={logout} class="navLink logoutBtn">Logout</button>
-			</nav>
-		</div>
-	</header>
+<div class="container">
+	{#if isLoading}
+		<div class="loading">Loading...</div>
+	{:else if user}
+		<div class="content">
+			<div class="adminHeader">
+				<h2>Admin Dashboard</h2>
+				<p>
+					Welcome, {user.name}! You have {user.role === 'admin' ? 'administrative' : 'staff'} access
+					to manage prayer requests.
+				</p>
+				<p class="userRole">
+					Role: {user.role === 'admin'
+						? 'Administrator'
+						: user.role === 'staff'
+							? 'Staff'
+							: 'Prayer Partner'}
+				</p>
+			</div>
 
-	<div class="container">
-		{#if isLoading}
-			<div class="loading">Loading...</div>
-		{:else if user}
-			<div class="content">
-				<div class="adminHeader">
-					<h2>Admin Dashboard</h2>
-					<p>
-						Welcome, {user.name}! You have {user.role === 'admin' ? 'administrative' : 'staff'} access
-						to manage prayer requests.
-					</p>
-					<p class="userRole">
-						Role: {user.role === 'admin'
-							? 'Administrator'
-							: user.role === 'staff'
-								? 'Staff'
-								: 'Prayer Partner'}
-					</p>
-				</div>
-
-				{#if stats}
-					<div class="statsGrid">
-						<div class="statCard">
-							<h3>Total Requests</h3>
-							<div class="statNumber">{stats.total}</div>
-						</div>
-						<div class="statCard">
-							<h3>Public Requests</h3>
-							<div class="statNumber">{stats.public}</div>
-						</div>
-						<div class="statCard">
-							<h3>Staff Only</h3>
-							<div class="statNumber">{stats.staffOnly}</div>
-						</div>
-						<div class="statCard">
-							<h3>Recent (7 days)</h3>
-							<div class="statNumber">{stats.recent}</div>
-						</div>
+			{#if stats}
+				<div class="statsGrid">
+					<div class="statCard">
+						<h3>Total Requests</h3>
+						<div class="statNumber">{stats.total}</div>
 					</div>
-				{/if}
-
-				<div class="adminActions">
-					<h3>Quick Actions</h3>
-					<div class="actionButtons">
-						<a href="/requests" class="actionBtn primary"> View All Requests </a>
-						<button class="actionBtn secondary" on:click={() => window.print()}>
-							Print All Requests
-						</button>
-						<button class="actionBtn secondary" on:click={emailRequests}> Email Requests </button>
-						<button class="actionBtn secondary"> Export Data </button>
+					<div class="statCard">
+						<h3>Public Requests</h3>
+						<div class="statNumber">{stats.public}</div>
+					</div>
+					<div class="statCard">
+						<h3>Staff Only</h3>
+						<div class="statNumber">{stats.staffOnly}</div>
+					</div>
+					<div class="statCard">
+						<h3>Recent (7 days)</h3>
+						<div class="statNumber">{stats.recent}</div>
 					</div>
 				</div>
+			{/if}
 
-				<div class="adminInfo">
-					<h3>Admin Features</h3>
-					<ul>
-						<li>View all prayer requests including staff-only ones</li>
-						<li>Filter requests by date range</li>
-						<li>Print formatted prayer request lists</li>
-						<li>Email prayer requests to congregation</li>
-						<li>Manage user accounts and permissions</li>
-					</ul>
+			<div class="adminActions">
+				<h3>Quick Actions</h3>
+				<div class="actionButtons">
+					<a href="/requests" class="actionBtn primary"> View All Requests </a>
+					<button class="actionBtn secondary" onclick={() => window.print()}>
+						Print All Requests
+					</button>
+					<button class="actionBtn secondary" onclick={emailRequests}> Email Requests </button>
+					<button class="actionBtn secondary"> Export Data </button>
 				</div>
 			</div>
-		{/if}
-	</div>
-</main>
+
+			<div class="adminInfo">
+				<h3>Admin Features</h3>
+				<ul>
+					<li>View all prayer requests including staff-only ones</li>
+					<li>Filter requests by date range</li>
+					<li>Print formatted prayer request lists</li>
+					<li>Email prayer requests to congregation</li>
+					<li>Manage user accounts and permissions</li>
+				</ul>
+			</div>
+		</div>
+	{/if}
+</div>
 
 <style>
 	.adminHeader {
@@ -320,16 +307,6 @@
 	}
 
 	@media (max-width: 640px) {
-		.header .container {
-			flex-direction: column;
-			gap: 1rem;
-		}
-
-		.nav {
-			flex-wrap: wrap;
-			justify-content: center;
-		}
-
 		.content {
 			padding: 1rem 0;
 		}

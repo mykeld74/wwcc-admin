@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	interface PrayerRequest {
 		id: number;
 		request: string;
@@ -11,23 +9,24 @@
 		updatedAt: string;
 	}
 
-	let requests: PrayerRequest[] = [];
-	let isLoading = true;
-	let error = '';
-	let userIsStaff = false;
+	let requests = $state<PrayerRequest[]>([]);
+	let isLoading = $state(true);
+	let error = $state('');
+	let userIsStaff = $state(false);
 
 	// Filters
-	let startDate = '';
-	let endDate = '';
-	let showPublicOnly = false;
-	let showFilters = false;
+	let startDate = $state('');
+	let endDate = $state('');
+	let showPublicOnly = $state(false);
+	let showFilters = $state(false);
 
 	// Print state
-	let isPrinting = false;
+	let isPrinting = $state(false);
 
-	onMount(async () => {
-		await loadRequests();
-		await checkUserPermissions();
+	// Load requests and check permissions on mount
+	$effect(() => {
+		loadRequests();
+		checkUserPermissions();
 	});
 
 	async function checkUserPermissions() {
@@ -134,11 +133,11 @@
 	<div class="header">
 		<h2>Prayer Requests</h2>
 		<div class="actions">
-			<button on:click={() => (showFilters = !showFilters)} class="btn secondary">
+			<button onclick={() => (showFilters = !showFilters)} class="btn secondary">
 				{showFilters ? 'Hide' : 'Show'} Filters
 			</button>
-			<button on:click={printRequests} class="btn primary"> Print </button>
-			<button on:click={emailRequests} class="btn primary"> Email </button>
+			<button onclick={printRequests} class="btn primary"> Print </button>
+			<button onclick={emailRequests} class="btn primary"> Email </button>
 		</div>
 	</div>
 
@@ -161,8 +160,8 @@
 				</div>
 			{/if}
 			<div class="filterActions">
-				<button on:click={applyFilters} class="btn primary">Apply</button>
-				<button on:click={clearFilters} class="btn secondary">Clear</button>
+				<button onclick={applyFilters} class="btn primary">Apply</button>
+				<button onclick={clearFilters} class="btn secondary">Clear</button>
 			</div>
 		</div>
 	{/if}

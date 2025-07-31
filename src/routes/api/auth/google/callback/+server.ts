@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { findOrCreateGoogleUser, createSession } from '$lib/server/auth';
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from '$env/static/private';
 
 export async function GET({
 	url,
@@ -8,7 +9,17 @@ export async function GET({
 	url: URL;
 	cookies: {
 		get: (key: string) => string | undefined;
-		set: (key: string, value: string, options?: any) => void;
+		set: (
+			key: string,
+			value: string,
+			options?: {
+				path?: string;
+				httpOnly?: boolean;
+				secure?: boolean;
+				sameSite?: string;
+				maxAge?: number;
+			}
+		) => void;
 	};
 }) {
 	try {
@@ -37,8 +48,8 @@ export async function GET({
 				'Content-Type': 'application/x-www-form-urlencoded'
 			},
 			body: new URLSearchParams({
-				client_id: process.env.GOOGLE_CLIENT_ID!,
-				client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+				client_id: GOOGLE_CLIENT_ID,
+				client_secret: GOOGLE_CLIENT_SECRET,
 				code,
 				grant_type: 'authorization_code',
 				redirect_uri: `${url.origin}/api/auth/google/callback`
@@ -97,12 +108,37 @@ export async function GET({
 			maxAge: 30 * 24 * 60 * 60 // 30 days
 		});
 
-		throw redirect(302, '/?message=Successfully signed in with Google');
+		// Return a response that sets the cookie and redirects
+		return new Response(
+			`<!DOCTYPE html>
+<html>
+<head>
+	<title>Redirecting...</title>
+</head>
+<body>
+	<script>
+		// Set the session cookie
+		document.cookie = 'session=${sessionToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax';
+		// Redirect to home page
+		window.location.href = '/?message=Successfully signed in with Google';
+	</script>
+	<p>Redirecting...</p>
+</body>
+</html>`,
+			{
+				status: 200,
+				headers: {
+					'Content-Type': 'text/html'
+				}
+			}
+		);
 	} catch (error) {
 		console.error('Google OAuth callback error:', error);
+		// If it's already a redirect response, re-throw it
 		if (error instanceof Response) {
 			throw error;
 		}
+		// Only redirect to login with error for actual errors
 		throw redirect(302, '/login?error=Authentication failed');
 	}
 }

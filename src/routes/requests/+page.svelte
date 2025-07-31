@@ -1,13 +1,13 @@
 <script lang="ts">
 	import PrayerRequestList from '$lib/components/PrayerRequestList.svelte';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	let user = $state<any>(null);
 	let isLoading = $state(true);
 
-	onMount(async () => {
-		await checkAuth();
+	// Check authentication on mount
+	$effect(() => {
+		checkAuth();
 	});
 
 	async function checkAuth() {
@@ -47,48 +47,33 @@
 	<title>Prayer Requests - Westwoods</title>
 </svelte:head>
 
-<main>
-	<header class="header">
-		<div class="container">
-			<h1>Westwoods Prayer Requests</h1>
-			<nav class="nav">
-				<a href="/" class="navLink">Home</a>
-				{#if user?.isStaff}
-					<a href="/admin" class="navLink">Admin</a>
-				{/if}
-				<button onclick={logout} class="navLink logoutBtn">Logout</button>
-			</nav>
-		</div>
-	</header>
-
-	<div class="container">
-		{#if isLoading}
-			<div class="loading">Loading...</div>
-		{:else if user}
-			<div class="content">
-				<div class="userInfo">
-					<h3>Welcome, {user.name}!</h3>
-					<p>Email: {user.email}</p>
-					<p>
-						Role: {user.role === 'admin'
-							? 'Administrator'
-							: user.role === 'staff'
-								? 'Staff'
-								: 'Prayer Partner'}
-					</p>
-					<p class="accessInfo">
-						{#if user.isStaff}
-							You have access to view all prayer requests including staff-only requests.
-						{:else}
-							You can view public prayer requests.
-						{/if}
-					</p>
-				</div>
-				<PrayerRequestList />
+<div class="container">
+	{#if isLoading}
+		<div class="loading">Loading...</div>
+	{:else if user}
+		<div class="content">
+			<div class="userInfo">
+				<h3>Welcome, {user.name}!</h3>
+				<p>Email: {user.email}</p>
+				<p>
+					Role: {user.role === 'admin'
+						? 'Administrator'
+						: user.role === 'staff'
+							? 'Staff'
+							: 'Prayer Partner'}
+				</p>
+				<p class="accessInfo">
+					{#if user.isStaff}
+						You have access to view all prayer requests including staff-only requests.
+					{:else}
+						You can view public prayer requests.
+					{/if}
+				</p>
 			</div>
-		{/if}
-	</div>
-</main>
+			<PrayerRequestList />
+		</div>
+	{/if}
+</div>
 
 <style>
 	.userInfo {
@@ -130,16 +115,6 @@
 	}
 
 	@media (max-width: 640px) {
-		.header .container {
-			flex-direction: column;
-			gap: 1rem;
-		}
-
-		.nav {
-			flex-wrap: wrap;
-			justify-content: center;
-		}
-
 		.content {
 			padding: 1rem 0;
 		}

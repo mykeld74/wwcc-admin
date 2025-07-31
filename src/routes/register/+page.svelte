@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 
-	let email = '';
-	let password = '';
-	let confirmPassword = '';
-	let name = '';
-	let role = 'prayer_partner';
-	let error = '';
-	let loading = false;
+	let email = $state('');
+	let password = $state('');
+	let confirmPassword = $state('');
+	let name = $state('');
+	let role = $state('prayer_partner');
+	let error = $state('');
+	let loading = $state(false);
 
-	onMount(() => {
-		// Check if user is already logged in
+	// Check if user is already logged in
+	$effect(() => {
 		fetch('/api/auth/me')
 			.then((res) => res.json())
 			.then((data) => {
@@ -72,7 +71,7 @@
 </svelte:head>
 
 <div class="registerContainer">
-	<form class="registerForm" on:submit|preventDefault={handleSubmit}>
+	<form class="registerForm" onsubmit={handleSubmit}>
 		<h2>Create Account</h2>
 		<p class="formDescription">Join our prayer community</p>
 
