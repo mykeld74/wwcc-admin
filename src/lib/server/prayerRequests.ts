@@ -62,8 +62,11 @@ export async function getPrayerRequests(
 	} else if (filters.includeStaffOnly === false) {
 		// Staff users can optionally filter to only show public requests
 		conditions.push(eq(prayerRequests.isStaffOnly, false));
+	} else if (filters.includeStaffOnly === true) {
+		// Staff users can optionally filter to only show staff-only requests
+		conditions.push(eq(prayerRequests.isStaffOnly, true));
 	}
-	// If userIsStaff is true and includeStaffOnly is not explicitly false, show all requests
+	// If userIsStaff is true and includeStaffOnly is not explicitly set, show all requests
 
 	const query = db.select().from(prayerRequests);
 

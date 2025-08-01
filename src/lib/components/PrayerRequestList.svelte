@@ -17,8 +17,26 @@
 	// Filters
 	let startDate = $state('');
 	let endDate = $state('');
-	let showPublicOnly = $state(false);
-	let showFilters = $state(false);
+	let showStaffOnly = $state(false);
+	let showFilters = $state(true);
+
+	// Set default dates (one week ago to today)
+	$effect(() => {
+		const today = new Date();
+		const oneWeekAgo = new Date();
+		oneWeekAgo.setDate(today.getDate() - 7);
+
+		// Format dates for input fields (YYYY-MM-DD)
+		startDate = oneWeekAgo.toISOString().split('T')[0];
+		endDate = today.toISOString().split('T')[0];
+	});
+
+	// Set default staff filter for staff users
+	$effect(() => {
+		if (userIsStaff) {
+			showStaffOnly = true;
+		}
+	});
 
 	// Print state
 	let isPrinting = $state(false);
@@ -32,12 +50,17 @@
 	async function checkUserPermissions() {
 		try {
 			const response = await fetch('/api/auth/me');
+
 			if (response.ok) {
 				const user = await response.json();
-				userIsStaff = user.isStaff;
+
+				userIsStaff = user.user.role === 'admin' || user.user.role === 'staff' || false;
+			} else {
+				userIsStaff = false;
 			}
 		} catch (error) {
 			console.error('Failed to check user permissions:', error);
+			userIsStaff = false;
 		}
 	}
 
@@ -49,15 +72,19 @@
 			const params = new URLSearchParams();
 			if (startDate) params.append('startDate', startDate);
 			if (endDate) params.append('endDate', endDate);
-			if (showPublicOnly) params.append('includeStaffOnly', 'false');
+			if (userIsStaff && !showStaffOnly) {
+				// For staff users, if showStaffOnly is unchecked, exclude staff-only requests
+				params.append('includeStaffOnly', 'false');
+			}
+			// If showStaffOnly is checked, don't add any staff filter - show all requests
 
 			console.log(
 				'Frontend Debug - Params:',
 				params.toString(),
 				'UserIsStaff:',
 				userIsStaff,
-				'ShowPublicOnly:',
-				showPublicOnly
+				'ShowStaffOnly:',
+				showStaffOnly
 			);
 
 			const response = await fetch(`/api/prayer-requests?${params}`);
@@ -82,7 +109,17 @@
 	function clearFilters() {
 		startDate = '';
 		endDate = '';
-		showPublicOnly = false;
+		showStaffOnly = false;
+		loadRequests();
+	}
+
+	function setDateRange(days: number) {
+		const today = new Date();
+		const startDateObj = new Date();
+		startDateObj.setDate(today.getDate() - days);
+
+		startDate = startDateObj.toISOString().split('T')[0];
+		endDate = today.toISOString().split('T')[0];
 		loadRequests();
 	}
 
@@ -114,7 +151,7 @@
 				body: JSON.stringify({
 					startDate,
 					endDate,
-					includeStaffOnly: !showPublicOnly
+					includeStaffOnly: userIsStaff && !showStaffOnly ? false : undefined
 				})
 			});
 
@@ -154,11 +191,20 @@
 			{#if userIsStaff}
 				<div class="filterGroup checkboxGroup">
 					<label class="checkboxLabel">
-						<input type="checkbox" bind:checked={showPublicOnly} class="checkbox" />
-						<span>Show Public Only</span>
+						<input type="checkbox" bind:checked={showStaffOnly} class="checkbox" />
+						<span>Show Staff Only</span>
 					</label>
 				</div>
 			{/if}
+			<div class="quickFilters">
+				<label>Quick Filters:</label>
+				<div class="quickFilterButtons">
+					<button onclick={() => setDateRange(7)} class="btn secondary small">1 Week</button>
+					<button onclick={() => setDateRange(30)} class="btn secondary small">1 Month</button>
+					<button onclick={() => setDateRange(90)} class="btn secondary small">3 Months</button>
+					<button onclick={() => setDateRange(180)} class="btn secondary small">6 Months</button>
+				</div>
+			</div>
 			<div class="filterActions">
 				<button onclick={applyFilters} class="btn primary">Apply</button>
 				<button onclick={clearFilters} class="btn secondary">Clear</button>
@@ -255,6 +301,11 @@
 		background: var(--borderColor);
 	}
 
+	.btn.small {
+		padding: 0.3rem 0.7rem;
+		font-size: 0.8rem;
+	}
+
 	.filters {
 		background: var(--cardBackground);
 		padding: 1.5rem;
@@ -306,6 +357,31 @@
 		width: 1rem;
 		height: 1rem;
 		accent-color: var(--primaryColor);
+	}
+
+	.quickFilters {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.quickFilters label {
+		font-weight: 600;
+		font-size: 0.9rem;
+		color: var(--contrastColor);
+	}
+
+	.quickFilterButtons {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.quickFilterButtons .btn {
+		padding: 0.3rem 0.7rem;
+		font-size: 0.8rem;
 	}
 
 	.filterActions {

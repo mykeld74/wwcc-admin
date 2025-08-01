@@ -35,9 +35,17 @@ export const GET = async ({
 		const startDate = url.searchParams.get('startDate');
 		const endDate = url.searchParams.get('endDate');
 		const includeStaffOnlyParam = url.searchParams.get('includeStaffOnly');
+		const staffOnlyParam = url.searchParams.get('staffOnly');
+
 		// For staff users: if includeStaffOnly is explicitly 'false', filter to public only
+		// If staffOnly is 'true', filter to staff-only only
 		// Otherwise, show all requests (including staff-only)
-		const includeStaffOnly = includeStaffOnlyParam === 'false' ? false : undefined;
+		let includeStaffOnly: boolean | undefined = undefined;
+		if (includeStaffOnlyParam === 'false') {
+			includeStaffOnly = false;
+		} else if (staffOnlyParam === 'true') {
+			includeStaffOnly = true;
+		}
 
 		// Check if user is authenticated and has staff permissions
 		const sessionToken = cookies.get('session');
@@ -60,7 +68,9 @@ export const GET = async ({
 			'IsStaff:',
 			userIsStaff,
 			'ShowPublicOnly:',
-			includeStaffOnly === false
+			includeStaffOnly === false,
+			'ShowStaffOnly:',
+			includeStaffOnly === true
 		);
 
 		const filters = {
