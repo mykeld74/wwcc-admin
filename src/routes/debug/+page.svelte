@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { checkAuthStatus } from '$lib/auth';
 
 	let envInfo = {};
 	let googleConfig = {};
-	let authStatus = '';
+	let user = $state<any>(null);
+	let isLoading = $state(true);
+	let error = $state('');
 
 	onMount(async () => {
 		// Check environment variables
@@ -24,17 +27,27 @@
 
 		// Check auth status
 		try {
-			const authResponse = await fetch('/api/auth/me');
-			if (authResponse.ok) {
-				const authData = await authResponse.json();
-				authStatus = `Authenticated as: ${authData.user.email}`;
-			} else {
-				authStatus = 'Not authenticated';
-			}
+			const { user: authUser } = await checkAuthStatus();
+			user = authUser;
 		} catch (error) {
-			authStatus = 'Auth check failed';
+			console.error('Auth check failed:', error);
+			user = null;
+		} finally {
+			isLoading = false;
 		}
 	});
+
+	async function checkAuth() {
+		try {
+			const { user: authUser } = await checkAuthStatus();
+			user = authUser;
+		} catch (error) {
+			console.error('Auth check failed:', error);
+			user = null;
+		} finally {
+			isLoading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -61,7 +74,7 @@
 			<pre>{JSON.stringify(googleConfig, null, 2)}</pre>
 
 			<h2>Authentication Status</h2>
-			<p>{authStatus}</p>
+			<p>{user ? `Authenticated as: ${user.email}` : 'Not authenticated'}</p>
 
 			<h2>Quick Actions</h2>
 			<div class="actions">

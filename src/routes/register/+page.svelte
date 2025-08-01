@@ -1,38 +1,45 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { checkAuthStatus } from '$lib/auth';
 
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let name = $state('');
 	let role = $state('prayer_partner');
+	let isLoading = $state(false);
 	let error = $state('');
-	let loading = $state(false);
+	let successMessage = $state('');
 
 	// Check if user is already logged in
 	$effect(() => {
-		fetch('/api/auth/me')
-			.then((res) => res.json())
-			.then((data) => {
-				if (data.user) {
-					goto('/');
-				}
-			});
+		checkAuth();
 	});
+
+	async function checkAuth() {
+		try {
+			const { user: authUser, isAuthenticated } = await checkAuthStatus();
+			if (isAuthenticated) {
+				await goto('/');
+			}
+		} catch (error) {
+			console.error('Auth check failed:', error);
+		}
+	}
 
 	async function handleSubmit() {
 		error = '';
-		loading = true;
+		isLoading = true;
 
 		if (password !== confirmPassword) {
 			error = 'Passwords do not match';
-			loading = false;
+			isLoading = false;
 			return;
 		}
 
 		if (password.length < 6) {
 			error = 'Password must be at least 6 characters long';
-			loading = false;
+			isLoading = false;
 			return;
 		}
 
@@ -62,7 +69,7 @@
 			error = 'Network error. Please try again.';
 		}
 
-		loading = false;
+		isLoading = false;
 	}
 </script>
 
@@ -101,15 +108,6 @@
 			</div>
 
 			<div class="formGroup">
-				<label for="role">Role</label>
-				<select id="role" class="input" bind:value={role} required>
-					<option value="prayer_partner">Prayer Partner</option>
-					<option value="staff">Staff</option>
-					<option value="admin">Admin</option>
-				</select>
-			</div>
-
-			<div class="formGroup">
 				<label for="password">Password</label>
 				<input
 					id="password"
@@ -139,8 +137,8 @@
 				<div class="errorMessage">{error}</div>
 			{/if}
 
-			<button type="submit" class="submitBtn" disabled={loading}>
-				{loading ? 'Creating Account...' : 'Create Account'}
+			<button type="submit" class="submitBtn" disabled={isLoading}>
+				{isLoading ? 'Creating Account...' : 'Create Account'}
 			</button>
 		</div>
 

@@ -1,30 +1,22 @@
 <script lang="ts">
-	import PrayerRequestList from '$lib/components/PrayerRequestList.svelte';
+	import { checkAuthStatus } from '$lib/auth';
 	import { goto } from '$app/navigation';
+	import PrayerRequestList from '$lib/components/PrayerRequestList.svelte';
 
 	let user = $state<any>(null);
 	let isLoading = $state(true);
 
-	// Check authentication on mount
 	$effect(() => {
 		checkAuth();
 	});
 
 	async function checkAuth() {
 		try {
-			const response = await fetch('/api/auth/me');
-			if (response.ok) {
-				const data = await response.json();
-				user = data.user;
-			} else {
-				// Redirect to login if not authenticated
-				await goto('/login');
-				return;
-			}
+			const { user: authUser } = await checkAuthStatus();
+			user = authUser;
 		} catch (error) {
 			console.error('Auth check failed:', error);
-			await goto('/login');
-			return;
+			user = null;
 		} finally {
 			isLoading = false;
 		}

@@ -109,6 +109,7 @@ export async function GET({
 		});
 
 		// Return a response that sets the cookie and redirects
+		const redirectUrl = user.role === 'prayer_partner' ? '/requests' : '/';
 		return new Response(
 			`<!DOCTYPE html>
 <html>
@@ -119,8 +120,8 @@ export async function GET({
 	<script>
 		// Set the session cookie
 		document.cookie = 'session=${sessionToken}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax';
-		// Redirect to home page
-		window.location.href = '/?message=Successfully signed in with Google';
+		// Redirect based on user role
+		window.location.href = '${redirectUrl}?message=Successfully signed in with Google';
 	</script>
 	<p>Redirecting...</p>
 </body>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { checkAuthStatus } from '$lib/auth';
 
 	let email = $state('');
 	let password = $state('');
@@ -45,7 +46,27 @@
 			});
 
 			if (response.ok) {
-				await goto('/');
+				console.log('Login successful', response);
+
+				// Check user role to determine redirect
+				const { user } = await checkAuthStatus();
+				if (user) {
+					const userRole = user.role;
+
+					// Dispatch login success event
+					if (typeof window !== 'undefined') {
+						window.dispatchEvent(new CustomEvent('login-success'));
+					}
+
+					if (userRole === 'prayer_partner') {
+						await goto('/requests');
+					} else {
+						await goto('/');
+					}
+				} else {
+					// Fallback to home page if user info can't be retrieved
+					await goto('/');
+				}
 			} else {
 				const data = await response.json();
 				error = data.error || 'Login failed.';

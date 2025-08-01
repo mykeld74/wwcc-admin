@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { checkAuthStatus } from '$lib/auth';
 	import { goto } from '$app/navigation';
 
 	let user = $state<any>(null);
@@ -12,25 +13,18 @@
 
 	async function checkAuth() {
 		try {
-			const response = await fetch('/api/auth/me');
-			if (response.ok) {
-				const data = await response.json();
-				user = data.user;
+			const { user: authUser } = await checkAuthStatus();
+			user = authUser;
 
-				if (!user.isStaff) {
-					await goto('/');
-					return;
-				}
-
-				await loadStats();
-			} else {
-				await goto('/login');
+			if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
+				await goto('/');
 				return;
 			}
+
+			await loadStats();
 		} catch (error) {
 			console.error('Auth check failed:', error);
-			await goto('/login');
-			return;
+			user = null;
 		} finally {
 			isLoading = false;
 		}

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { checkAuthStatus } from '$lib/auth';
+
 	interface PrayerRequest {
 		id: number;
 		request: string;
@@ -49,12 +51,9 @@
 
 	async function checkUserPermissions() {
 		try {
-			const response = await fetch('/api/auth/me');
-
-			if (response.ok) {
-				const user = await response.json();
-
-				userIsStaff = user.user.role === 'admin' || user.user.role === 'staff' || false;
+			const { user, isAuthenticated } = await checkAuthStatus();
+			if (isAuthenticated && user) {
+				userIsStaff = user.role === 'admin' || user.role === 'staff' || false;
 			} else {
 				userIsStaff = false;
 			}

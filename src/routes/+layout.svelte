@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { checkAuthStatus } from '$lib/auth';
 	import '$lib/css/reset.css';
 	import '$lib/css/styles.css';
 
@@ -11,24 +13,58 @@
 		checkAuth();
 	});
 
-	async function checkAuth() {
-		try {
-			const response = await fetch('/api/auth/me');
-			if (response.ok) {
-				const data = await response.json();
-				user = data.user;
-			}
-		} catch (error) {
-			console.error('Auth check failed:', error);
-		} finally {
-			isLoading = false;
+	// Listen for login success events
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			const handleLoginSuccess = () => {
+				setTimeout(checkAuth, 100);
+			};
+
+			window.addEventListener('login-success', handleLoginSuccess);
+
+			return () => {
+				window.removeEventListener('login-success', handleLoginSuccess);
+			};
 		}
+	});
+
+	// Listen for storage events (for cross-tab auth changes)
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			const handleStorageChange = () => {
+				checkAuth();
+			};
+
+			window.addEventListener('storage', handleStorageChange);
+
+			// Also check auth when the page becomes visible
+			const handleVisibilityChange = () => {
+				if (!document.hidden) {
+					checkAuth();
+				}
+			};
+
+			document.addEventListener('visibilitychange', handleVisibilityChange);
+
+			return () => {
+				window.removeEventListener('storage', handleStorageChange);
+				document.removeEventListener('visibilitychange', handleVisibilityChange);
+			};
+		}
+	});
+
+	async function checkAuth() {
+		const { user: authUser } = await checkAuthStatus();
+		user = authUser;
+		isLoading = false;
 	}
 
 	async function logout() {
 		try {
 			await fetch('/api/auth/logout', { method: 'POST' });
 			user = null;
+			isLoading = false;
+			await goto('/login');
 		} catch (error) {
 			console.error('Logout failed:', error);
 		}
@@ -40,18 +76,19 @@
 		<div class="container">
 			<h1>Westwoods Admin Page</h1>
 			<nav class="nav">
-				<a href="/" class="navLink">Home</a>
-				{#if user}
+				{#if user && (user.role === 'admin' || user.role === 'staff')}
+					<a href="/" class="navLink">Home</a>
 					<a href="/requests" class="navLink">View Requests</a>
-					{#if user.isStaff}
-						<a href="/admin" class="navLink">Admin</a>
-					{/if}
+				{/if}
+				{#if user && user.role === 'admin'}
+					<a href="/admin/users" class="navLink">Manage Users</a>
+				{/if}
+				{#if user}
 					<button onclick={logout} class="navLink logoutBtn">Logout</button>
 				{:else}
 					<a href="/login" class="navLink">Login</a>
 					<a href="/register" class="navLink">Register</a>
 				{/if}
-				<a href="/test-google" class="navLink">Test OAuth</a>
 			</nav>
 		</div>
 	</header>
