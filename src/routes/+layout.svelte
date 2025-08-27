@@ -79,6 +79,7 @@
 				{#if user && (user.role === 'admin' || user.role === 'staff')}
 					<a href="/" class="navLink">Home</a>
 					<a href="/requests" class="navLink">View Requests</a>
+					<a href="/admin/volunteer-opportunities" class="navLink">Volunteer Opportunities</a>
 				{/if}
 				{#if user && user.role === 'admin'}
 					<a href="/admin/users" class="navLink">Manage Users</a>

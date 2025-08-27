@@ -77,20 +77,12 @@
 			}
 			// If showStaffOnly is checked, don't add any staff filter - show all requests
 
-			console.log(
-				'Frontend Debug - Params:',
-				params.toString(),
-				'UserIsStaff:',
-				userIsStaff,
-				'ShowStaffOnly:',
-				showStaffOnly
-			);
+			// Debug logging removed for production
 
 			const response = await fetch(`/api/prayer-requests?${params}`);
 
 			if (response.ok) {
 				requests = await response.json();
-				console.log('Frontend Debug - Received requests:', requests.length);
 			} else {
 				error = 'Failed to load prayer requests.';
 			}

@@ -25,11 +25,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Password must be at least 6 characters long' }, { status: 400 });
 		}
 
-		// Validate role
-		const validRoles = ['prayer_partner', 'staff', 'admin'];
-		if (!validRoles.includes(role)) {
-			return json({ error: 'Invalid role' }, { status: 400 });
-		}
+		// SECURITY: Only allow prayer_partner role during registration
+		// Staff and admin roles must be assigned by existing admins
+		const validRole = 'prayer_partner';
 
 		// Check if user already exists
 		const [existingUser] = await db
@@ -41,8 +39,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'User with this email already exists' }, { status: 409 });
 		}
 
-		// Create user
-		const user = await createUser(email, name, password, role);
+		// Create user with restricted role
+		const user = await createUser(email, name, password, validRole);
 
 		return json({
 			message: 'User created successfully',

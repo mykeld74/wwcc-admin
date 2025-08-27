@@ -1,13 +1,66 @@
 import { json } from '@sveltejs/kit';
 import { createPrayerRequest, getPrayerRequests } from '$lib/server/prayerRequests';
 
+// Simple in-memory rate limiting (in production, use Redis or similar)
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 5; // Max 5 requests per hour per IP
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function checkRateLimit(ip: string): boolean {
+	const now = Date.now();
+	const userData = requestCounts.get(ip);
+
+	if (!userData || now > userData.resetTime) {
+		requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+		return true;
+	}
+
+	if (userData.count >= RATE_LIMIT) {
+		return false;
+	}
+
+	userData.count++;
+	return true;
+}
+
 export const POST = async ({ request }: { request: Request }) => {
 	try {
+		// Basic rate limiting check
+		const ip =
+			request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+
+		if (!checkRateLimit(ip)) {
+			return json(
+				{
+					error: 'Rate limit exceeded. Please wait before submitting another request.'
+				},
+				{ status: 429 }
+			);
+		}
+
 		const body = await request.json();
 		const { request: prayerRequest, name, email, isStaffOnly } = body;
 
 		if (!prayerRequest || typeof prayerRequest !== 'string') {
 			return json({ error: 'Prayer request is required' }, { status: 400 });
+		}
+
+		// Validate prayer request length
+		if (prayerRequest.length > 1000) {
+			return json({ error: 'Prayer request is too long (max 1000 characters)' }, { status: 400 });
+		}
+
+		// Validate name length
+		if (name && name.length > 100) {
+			return json({ error: 'Name is too long (max 100 characters)' }, { status: 400 });
+		}
+
+		// Validate email format if provided
+		if (email) {
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email)) {
+				return json({ error: 'Invalid email format' }, { status: 400 });
+			}
 		}
 
 		const newRequest = await createPrayerRequest({
@@ -62,16 +115,7 @@ export const GET = async ({
 			}
 		}
 
-		console.log(
-			'API Debug - User:',
-			user?.email,
-			'IsStaff:',
-			userIsStaff,
-			'ShowPublicOnly:',
-			includeStaffOnly === false,
-			'ShowStaffOnly:',
-			includeStaffOnly === true
-		);
+		// Debug logging removed for production
 
 		const filters = {
 			startDate: startDate ? new Date(startDate) : undefined,
@@ -80,7 +124,6 @@ export const GET = async ({
 		};
 
 		const requests = await getPrayerRequests(filters, userIsStaff);
-		console.log('API Debug - Found requests:', requests.length);
 		return json(requests);
 	} catch (error) {
 		console.error('Error fetching prayer requests:', error);
